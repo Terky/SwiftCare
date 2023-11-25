@@ -7,7 +7,7 @@ let package = Package(
     name: "SwiftCare",
     dependencies: [
         .package(url: "https://github.com/apple/swift-algorithms.git", exact: "1.2.0"),
-        .package(url: "https://github.com/apple/swift-collections.git", exact: "1.0.5")
+        .package(url: "https://github.com/apple/swift-collections.git", branch: "main")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
