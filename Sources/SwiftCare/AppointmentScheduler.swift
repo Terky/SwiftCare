@@ -1,22 +1,22 @@
 import Foundation
 
-class Appointment: CustomStringConvertible {
+public class Appointment: CustomStringConvertible {
 
-    let id = UUID()
-    var name: String
-    let startDate: Date
+    public let id = UUID()
+    public var name: String
+    public let startDate: Date
     // let endDate: Date
-    let machineIndex: Int
-    var patientID: UUID?
+    public let machineIndex: Int
+    public var patientID: UUID?
 
-    init(name: String, startDate: Date, machineIndex: Int, patientID: UUID?) {
+    public init(name: String, startDate: Date, machineIndex: Int, patientID: UUID?) {
         self.name = name
         self.startDate = startDate
         self.machineIndex = machineIndex
         self.patientID = patientID
     }
 
-    var description: String {
+    public var description: String {
         return "Appointment(startDate: \(startDate.formatted()), machineIndex: \(machineIndex), patientID: \(patientID))"
     }
 }
@@ -40,11 +40,15 @@ class Appointment: CustomStringConvertible {
 
 // var machineCalendars = availableMachines.indices.map { MachineCalendar(machine: $0) }
 
-final class AppointmentScheduler {
+public final class AppointmentScheduler {
 
     private var appointments = [Appointment]()
-    static let shared = AppointmentScheduler()
+    public static let shared = AppointmentScheduler()
     private init() {}
+
+    public func getAppointments(from startDate: Date, to endDate: Date) -> [Appointment] {
+        return appointments.filter { $0.startDate >= startDate && $0.startDate <= endDate && $0.patientID != nil }
+    }
 
     func dumpAppointments() {
         print("Total appointments: \(appointments.filter { $0.patientID != nil }.count)")
@@ -66,7 +70,7 @@ final class AppointmentScheduler {
         // print(patientsToAppointments)
     }
 
-    func createSlotsForADay() -> [Appointment] {
+    private func createSlotsForADay() -> [Appointment] {
         var result = [Appointment]()
         let startingFrom: Date
         if let lastSlotTime = appointments.last?.startDate {
@@ -92,18 +96,18 @@ final class AppointmentScheduler {
         return result
     }
 
-    func makeAppointment(for event: Event) {
+    public func makeAppointment(for event: Event, _ name: String) {
         switch event.type {
             case .treatmentSession(let cancerType, let daysInRow, let patientID):
-                bookAppointments(cancerType: cancerType, daysInRow: daysInRow, paitentID: patientID)
-            case .maintenance(let machine):
+                bookAppointments(name: name, cancerType: cancerType, daysInRow: daysInRow, paitentID: patientID)
+            case .maintenance(let _):
                 return
-            case .breakdown(let machine):
+            case .breakdown(let _):
                 return
         }
     }
 
-    private func bookAppointments(cancerType: CancerType, daysInRow: Int, paitentID: UUID) {
+    private func bookAppointments(name: String,cancerType: CancerType, daysInRow: Int, paitentID: UUID) {
         let suitableMachines = cancerType
             .suitableMachineTypes
             .flatMap { indices(of: $0, in: availableMachines) }
@@ -113,11 +117,12 @@ final class AppointmentScheduler {
         let appointmentsToBook = getAvalableAppointments(machines: suitableMachines, daysInRow: daysInRow)
         print("[DBG] \(appointmentsToBook.count) for \(paitentID)")
         for appointment in appointmentsToBook {
+            appointment.name = name
             appointment.patientID = paitentID
         }
     }
 
-    func extendAppointmentsIfNeeded(machines: [Int], daysInRow: Int) {
+    private func extendAppointmentsIfNeeded(machines: [Int], daysInRow: Int) {
         let firstAvailableSlot = appointments
             .filter { machines.contains($0.machineIndex) }
             .first { $0.patientID == nil }
@@ -140,15 +145,16 @@ final class AppointmentScheduler {
     }
 
     private func getAvalableAppointments(machines: [Int], daysInRow: Int) -> [Appointment] {
-        let appointmentsForMachine = appointments
+        let freeAppointmentsForMachine = appointments
             .filter { machines.contains($0.machineIndex) }
+            .filter { $0.patientID == nil }
 
         var appointmentsLeft = daysInRow
         var appointmentsToBook = [Appointment]()
-        for appointment in appointmentsForMachine where appointment.patientID == nil {
+        for appointment in freeAppointmentsForMachine {
             if appointmentsToBook.isEmpty {
                 appointmentsLeft -= 1
-                appointmentsToBook.append(appointment)                
+                appointmentsToBook.append(appointment)
             } else if let last = appointmentsToBook.last {
                 if Calendar.current.compare(last.startDate, to: appointment.startDate, toGranularity: .day) == .orderedSame {
                     continue

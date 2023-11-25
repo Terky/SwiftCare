@@ -1,23 +1,23 @@
 import Foundation
 
-enum EventType: Hashable {
+public enum EventType: Hashable {
 
-    case appointment(cancerType: CancerType, daysInTheRow: Int)
+    case treatmentSession(cancerType: CancerType, daysInRow: Int, patientID: UUID)
     case maintenance(machineIndex: Int)
     case breakdown(machineIndex: Int)
 }
 
-typealias EventPriority = Int
+public typealias EventPriority = Int
 
 extension EventPriority {
 
-    static let urgent = 100 
-    static let high = 50
-    static let normal = 25
-    static let low = 0
+    public static let urgent = 100 
+    public static let high = 50
+    public static let normal = 25
+    public static let low = 0
 }
 
-enum CancerType: Hashable {
+public enum CancerType: String, Codable, Hashable {
 
     case craniospinal
     case breast
@@ -69,13 +69,13 @@ enum CancerType: Hashable {
     }
 }
 
-struct Event: Hashable, Comparable {
+public struct Event: Hashable, Comparable {
 
     var priority: EventPriority
     let type: EventType
     let desiredDate: Date
 
-    static func < (_ lhs: Self, _ rhs: Self) -> Bool {
+    public static func < (_ lhs: Self, _ rhs: Self) -> Bool {
         return lhs.priority < rhs.priority
     }
 }
