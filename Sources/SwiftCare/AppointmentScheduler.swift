@@ -21,25 +21,6 @@ public class Appointment: CustomStringConvertible {
     }
 }
 
-// struct TimeSlot {
-
-//     let startTime: Date
-//     var appointmentID: UUID?
-// }
-
-// // [TS1tb1, TS1tb2, TS1vb1, TS1vb2, TS1u, TS2tb1, TS2tb2, TS2vb1, TS2vb2, TS2u]
-
-// struct MachineCalendar {
-
-//     var slots = [TimeSlot]()
-//     let machine: Int
-//     var machineType: MachineType {
-//         return availableMachines[machine]
-//     }
-// }
-
-// var machineCalendars = availableMachines.indices.map { MachineCalendar(machine: $0) }
-
 public final class AppointmentScheduler {
 
     private var appointments = [Appointment]()
@@ -96,18 +77,18 @@ public final class AppointmentScheduler {
         return result
     }
 
-    public func makeAppointment(for event: Event, _ name: String) {
+    public func makeAppointments(for event: Event, _ name: String) -> [Appointment] {
         switch event.type {
             case .treatmentSession(let cancerType, let daysInRow, let patientID):
-                bookAppointments(name: name, cancerType: cancerType, daysInRow: daysInRow, paitentID: patientID)
+                return bookAppointments(name: name, cancerType: cancerType, daysInRow: daysInRow, paitentID: patientID)
             case .maintenance(let _):
-                return
+                return []
             case .breakdown(let _):
-                return
+                return []
         }
     }
 
-    private func bookAppointments(name: String,cancerType: CancerType, daysInRow: Int, paitentID: UUID) {
+    private func bookAppointments(name: String,cancerType: CancerType, daysInRow: Int, paitentID: UUID) -> [Appointment] {
         let suitableMachines = cancerType
             .suitableMachineTypes
             .flatMap { indices(of: $0, in: availableMachines) }
@@ -120,6 +101,8 @@ public final class AppointmentScheduler {
             appointment.name = name
             appointment.patientID = paitentID
         }
+
+        return appointmentsToBook
     }
 
     private func extendAppointmentsIfNeeded(machines: [Int], daysInRow: Int) {

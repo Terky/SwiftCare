@@ -29,7 +29,7 @@ final class EventsController: RouteCollection {
             .map(AppointmentContent.init)
     }
 
-    func addEventHandler(_ req: Request) async throws -> HTTPStatus {
+    func addEventHandler(_ req: Request) async throws -> SchedulingResult {
         struct Parameters: Content {
 
             let name: String
@@ -46,8 +46,8 @@ final class EventsController: RouteCollection {
         )
 
         let scheduler = AppointmentScheduler.shared
-        scheduler.makeAppointment(for: event, params.name)
+        let appointments = scheduler.makeAppointments(for: event, params.name)
 
-        return .ok
+        return SchedulingResult(firstAppointmentDate: appointments.first!.startDate)
     }
 }
